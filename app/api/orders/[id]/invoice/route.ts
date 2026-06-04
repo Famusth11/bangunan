@@ -96,40 +96,38 @@ export async function GET(
   doc.text(order.whatsapp, margin, yPos);
 
   // --- TABEL ITEM ---
+ // Items Table - Versi Rapi & Proporsional
   yPos += 10;
   autoTable(doc, {
     startY: yPos,
-    head: [["#", "Item", "Satuan", "Kuantitas", "Biaya satuan", "Total"]],
+    head: [["#", "Item","Satuan","Kuantitas", "Biaya Satuan", "Total"]],
     body: [
-      [
-        "1",
-        order.item,
-        "Meter",
-        order.quantity.toString(),
-        rupiah(order.price.toString()),
-        rupiah(total.toString()),
-      ],
+      ["1", order.item, "Pcs", order.quantity.toString(), rupiah(order.price.toString()), rupiah(total.toString())]
     ],
+    // Pengaturan lebar kolom yang proporsional agar tidak ada teks melorot/terpotong
     columnStyles: {
-      0: { cellWidth: 8, halign: "center" },
-      1: { cellWidth: 50, halign: "left" },
-      2: { cellWidth: 25, halign: "center" },
-      3: { cellWidth: 25, halign: "center" },
-      4: { cellWidth: 30, halign: "center" },
-      5: { cellWidth: 43, halign: "right" },
+      0: { cellWidth: 10, halign: "center" },  // Kolom #
+      1: { cellWidth: 45, halign: "left" },    // Kolom Item
+      2: { cellWidth: 22, halign: "center" },  // Kolom Satuan
+      3: { cellWidth: 25, halign: "center" },  // Kolom Kuantitas
+      4: { cellWidth: 40, halign: "right" },   // Kolom Biaya Satuan
+      5: { cellWidth: 43, halign: "right" }    // Kolom Total
     },
-    styles: {
+    styles: { 
       fontSize: 9,
-      cellPadding: 3,
+      cellPadding: 4,            // Ditambah sedikit agar baris lebih lega dan rapi
+      valign: "middle",          // Menjaga semua teks tetap di tengah secara vertikal
       textColor: [0, 0, 0],
+      overflow: "linebreak"      // Otomatis membuat baris baru jika teks item terlalu panjang
     },
-    headStyles: {
-      fillColor: [220, 220, 220],
-      textColor: [0, 0, 0],
+    headStyles: { 
+      fillColor: [59, 130, 246], // Mengubah warna header ke Biru Modern (opsional, sesuaikan seleramu)
+      textColor: [255, 255, 255],
       fontStyle: "bold",
       fontSize: 9,
+      halign: "center"           // Membuat teks header tabel rata tengah semua
     },
-    margin: { left: margin, right: margin },
+    margin: margin
   });
 
   // --- SUBTOTAL & TOTAL ---
