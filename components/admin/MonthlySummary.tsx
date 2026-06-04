@@ -66,17 +66,6 @@ export function MonthlySummary() {
     }
   }
 
-  function getTypeColor(type: string) {
-    const colors: Record<string, string> = {
-      MASUK: "text-green-600",
-      KELUAR: "text-red-600",
-      ONGKIR: "text-orange-600",
-      HUTANG: "text-yellow-600",
-      PIUTANG: "text-blue-600"
-    };
-    return colors[type] || "text-slate-600";
-  }
-
   function getTypeLabel(type: string) {
     const labels: Record<string, string> = {
       MASUK: "Pemasukan",
