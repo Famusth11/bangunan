@@ -96,7 +96,7 @@ export async function GET(
   doc.text(order.whatsapp, margin, yPos);
 
   // --- TABEL ITEM ---
- // Items Table - Versi Rapi & Proporsional
+
   yPos += 10;
   autoTable(doc, {
     startY: yPos,
@@ -104,7 +104,6 @@ export async function GET(
     body: [
       ["1", order.item, "Pcs", order.quantity.toString(), rupiah(order.price.toString()), rupiah(total.toString())]
     ],
-    // Pengaturan lebar kolom yang proporsional agar tidak ada teks melorot/terpotong
     columnStyles: {
       0: { cellWidth: 10, halign: "center" },  // Kolom #
       1: { cellWidth: 45, halign: "left" },    // Kolom Item
@@ -115,17 +114,17 @@ export async function GET(
     },
     styles: { 
       fontSize: 9,
-      cellPadding: 4,            // Ditambah sedikit agar baris lebih lega dan rapi
-      valign: "middle",          // Menjaga semua teks tetap di tengah secara vertikal
+      cellPadding: 4,            
+      valign: "middle",         
       textColor: [0, 0, 0],
-      overflow: "linebreak"      // Otomatis membuat baris baru jika teks item terlalu panjang
+      overflow: "linebreak"      
     },
     headStyles: { 
-      fillColor: [59, 130, 246], // Mengubah warna header ke Biru Modern (opsional, sesuaikan seleramu)
+      fillColor: [59, 130, 246], 
       textColor: [255, 255, 255],
       fontStyle: "bold",
       fontSize: 9,
-      halign: "center"           // Membuat teks header tabel rata tengah semua
+      halign: "center"           
     },
     margin: margin
   });
