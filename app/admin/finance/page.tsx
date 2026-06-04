@@ -1,7 +1,7 @@
 import { ResourceManager } from "@/components/admin/ResourceManager";
 import { FinanceSummary } from "@/components/admin/FinanceSummary";
 
-const today = new Date().toISOString().split('T')[0];
+//const today = new Date().toISOString().split('T')[0];
 
 const fields = [
   { name: "title", label: "Judul", required: true },
