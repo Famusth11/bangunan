@@ -99,7 +99,7 @@ export async function GET(
   yPos += 8;
   autoTable(doc, {
     startY: yPos,
-    head: [["#", "Item", "Satuan", "Kuantitas", "Biaya Satuan", "Total"]],
+    head: [["#", "Item", "Satuan", "Kuantitas", "Biaya satuan", "Total"]],
     body: [
       [
         "1",
@@ -111,62 +111,49 @@ export async function GET(
       ],
     ],
     columnStyles: {
-      0: { cellWidth: 10, halign: "center", valign: "middle" },
-      1: { cellWidth: 48, halign: "left", valign: "top" },
-      2: { cellWidth: 16, halign: "center", valign: "middle" },
-      3: { cellWidth: 16, halign: "center", valign: "middle" },
-      4: { cellWidth: 32, halign: "right", valign: "middle" },
-      5: { cellWidth: 32, halign: "right", valign: "middle" },
+      0: { cellWidth: 8, halign: "center" },
+      1: { cellWidth: 50 },
+      2: { cellWidth: 20, halign: "center" },
+      3: { cellWidth: 20, halign: "center" },
+      4: { cellWidth: 30, halign: "right" },
+      5: { cellWidth: 32, halign: "right" },
     },
     styles: {
       fontSize: 9,
-      cellPadding: { top: 5, right: 4, bottom: 5, left: 4 },
+      cellPadding: 3,
       textColor: [0, 0, 0],
-      lineColor: [200, 200, 200],
-      lineWidth: 0.3,
-      overflow: "linebreak",
     },
     headStyles: {
       fillColor: [220, 220, 220],
-      textColor: [60, 60, 60],
+      textColor: [0, 0, 0],
       fontStyle: "bold",
       fontSize: 9,
-      lineColor: [180, 180, 180],
-      lineWidth: 0.5,
-    },
-    bodyStyles: {
-      lineColor: [220, 220, 220],
-      lineWidth: 0.3,
-      fillColor: [255, 255, 255],
     },
     margin: { left: margin, right: margin },
   });
 
   // --- SUBTOTAL & TOTAL ---
   const finalY = doc.lastAutoTable?.finalY ?? yPos + 20;
-  yPos = finalY + 6;
+  yPos = finalY + 8;
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
 
-  // Align dengan kolom Total table (36 wide dari kanan)
-  const subtotalLabelX = pageWidth - margin - 36;
-  const subtotalValueX = pageWidth - margin - 5;
-
-  doc.text("Subtotal", subtotalLabelX, yPos);
-  doc.text(rupiah(total.toString()), subtotalValueX, yPos, { align: "right" });
+  const subtotalX = pageWidth - margin - 70;
+  doc.text("Subtotal", subtotalX, yPos);
+  doc.text(rupiah(total.toString()), pageWidth - margin - 2, yPos, { align: "right" });
 
   // Garis Pemisah
   yPos += 4;
   doc.setDrawColor(180);
   doc.setLineWidth(0.5);
-  doc.line(subtotalLabelX, yPos, pageWidth - margin, yPos);
+  doc.line(subtotalX, yPos, pageWidth - margin, yPos);
 
   // Total Akhir
   yPos += 5;
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
-  doc.text("Total", subtotalLabelX, yPos);
-  doc.text(rupiah(total.toString()), subtotalValueX, yPos, { align: "right" });
+  doc.text("Total", subtotalX, yPos);
+  doc.text(rupiah(total.toString()), pageWidth - margin - 2, yPos, { align: "right" });
 
   // --- Tanda Tangan & Status ---
   yPos += 15;
