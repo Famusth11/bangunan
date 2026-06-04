@@ -7,14 +7,15 @@ export async function GET() {
   if (auth.error) return auth.error;
 
   const now = new Date();
+  // Start dan end bulan dalam timezone lokal
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const startOfNextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
 
   const records = await prisma.financeRecord.findMany({
     where: {
       recordDate: {
         gte: startOfMonth,
-        lt: startOfNextMonth
+        lt: endOfMonth
       }
     }
   });
@@ -42,6 +43,17 @@ export async function GET() {
     net: income - expense,
     supplierDebt,
     customerReceivable,
-    count: records.length
+    count: records.length,
+    debug: {
+      startOfMonth: startOfMonth.toISOString(),
+      endOfMonth: endOfMonth.toISOString(),
+      recordCount: records.length,
+      records: records.map(r => ({
+        title: r.title,
+        type: r.type,
+        amount: r.amount.toString(),
+        recordDate: r.recordDate.toISOString()
+      }))
+    }
   });
 }

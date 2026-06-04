@@ -15,31 +15,161 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
   if (!order) return NextResponse.json({ message: "Order tidak ditemukan" }, { status: 404 });
 
   const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
   const total = Number(order.price) * order.quantity;
+  const margin = 14;
+  const rightColumn = pageWidth - margin - 50;
 
-  doc.setFontSize(18);
-  doc.text("INVOICE BANGUNAN PRO", 14, 18);
+  // Header - Company Info (Left)
+  doc.setFontSize(13);
+  doc.setFont(undefined, "bold");
+  doc.text("BANGUNAWAR", margin, 15);
+  
+  doc.setFontSize(9);
+  doc.setFont(undefined, "normal");
+  doc.text("Karangnangka RT 02 RW 01", margin, 21);
+  doc.text("089525626994", margin, 26);
+  doc.text("wildanpowel@gmail.com", margin, 31);
+
+  // Header - FAKTUR (Right)
+  doc.setFontSize(22);
+  doc.setFont(undefined, "bold");
+  doc.text("FAKTUR", rightColumn + 5, 18);
+  
+  // Invoice Number and Date (Right)
   doc.setFontSize(10);
-  doc.text(`No: ${order.invoiceNumber}`, 14, 28);
-  doc.text(`Tanggal: ${order.createdAt.toLocaleDateString("id-ID")}`, 14, 34);
-  doc.text(`Customer: ${order.customerName}`, 14, 44);
-  doc.text(`WhatsApp: ${order.whatsapp}`, 14, 50);
-  doc.text(`Alamat Proyek: ${order.projectAddress}`, 14, 56);
+  doc.setFont(undefined, "normal");
+  doc.text(`#${order.invoiceNumber}`, rightColumn + 5, 28);
+  doc.text(`Tanggal: ${order.createdAt.toLocaleDateString("id-ID")}`, rightColumn + 5, 34);
 
+  // "Tagih Kepada:" section (Left)
+  let yPos = 44;
+  doc.setFontSize(10);
+  doc.setFont(undefined, "bold");
+  doc.text("Tagih Kepada: " + order.customerName, margin, yPos);
+  
+  doc.setFontSize(9);
+  doc.setFont(undefined, "normal");
+  yPos += 5;
+  doc.text(order.projectAddress, margin, yPos);
+  yPos += 5;
+  doc.text(order.whatsapp, margin, yPos);
+
+  // Items Table
+  yPos += 8;
   autoTable(doc, {
-    startY: 66,
-    head: [["Barang", "Qty", "Harga", "Total"]],
-    body: [[order.item, order.quantity, rupiah(order.price.toString()), rupiah(total)]],
-    styles: { fontSize: 10 },
-    headStyles: { fillColor: [15, 139, 141] }
+    startY: yPos,
+    head: [["#", "Item", "Satuan", "Kuantitas", "Biaya satuan", "Total"]],
+    body: [
+      ["1", order.item, "Meter", order.quantity.toString(), rupiah(order.price.toString()), rupiah(total.toString())]
+    ],
+    columnStyles: {
+      0: { cellWidth: 8, halign: "center" },
+      1: { cellWidth: 50 },
+      2: { cellWidth: 20, halign: "center" },
+      3: { cellWidth: 20, halign: "center" },
+      4: { cellWidth: 30, halign: "right" },
+      5: { cellWidth: 32, halign: "right" }
+    },
+    styles: { 
+      fontSize: 9,
+      cellPadding: 3,
+      textColor: [0, 0, 0]
+    },
+    headStyles: { 
+      fillColor: [220, 220, 220],
+      textColor: [0, 0, 0],
+      fontStyle: "bold",
+      fontSize: 9
+    },
+    margin: { left: margin, right: margin }
   });
 
-  const finalY = (doc as any).lastAutoTable.finalY + 12;
+  // Subtotal and Total
+  yPos = (doc as any).lastAutoTable.finalY + 8;
+  doc.setFontSize(10);
+  doc.setFont(undefined, "normal");
+  
+  // Subtotal
+  const subtotalX = pageWidth - margin - 70;
+  doc.text("Subtotal", subtotalX, yPos);
+  doc.text(rupiah(total.toString()), pageWidth - margin - 2, yPos, { align: "right" });
+  
+  // Line separator
+  yPos += 4;
+  doc.setDrawColor(180);
+  doc.setLineWidth(0.5);
+  doc.line(subtotalX, yPos, pageWidth - margin, yPos);
+  
+  // Total
+  yPos += 5;
+  doc.setFont(undefined, "bold");
+  doc.setFontSize(11);
+  doc.text("Total", subtotalX, yPos);
+  doc.text(rupiah(total.toString()), pageWidth - margin - 2, yPos, { align: "right" });
+
+  // Signature section
+  yPos += 15;
+  
+  // Signature area (Right side)
+  const signatureX = pageWidth - margin - 55;
+  
+  // Payment Status stamp (positioned at signature area)
+  doc.setFontSize(16);
+  const isLunas = order.paymentStatus === "LUNAS";
+  if (isLunas) {
+    doc.setTextColor(100, 180, 100);
+    doc.text("LUNAS", signatureX - 5, yPos + 8, { angle: -20 });
+  } else {
+    doc.setTextColor(220, 100, 100);
+    doc.setFontSize(14);
+    doc.text("BELUM LUNAS", signatureX - 10, yPos + 8, { angle: -20 });
+  }
+  doc.setFont(undefined, "bold");
+  doc.setTextColor(0, 0, 0);
+  doc.setFont(undefined, "normal");
+  
+  // Signature line
+  yPos += 20;
+  doc.setFontSize(9);
+  doc.setDrawColor(0);
+  doc.setLineWidth(0.5);
+  doc.line(signatureX, yPos, pageWidth - margin - 5, yPos);
+  
+  // Simple signature representation (curved lines)
+  doc.setLineWidth(0.3);
+  doc.setTextColor(80, 80, 80);
+  // Draw a simple signature-like mark
+  const sigStartX = signatureX + 5;
+  const sigY = yPos - 8;
+  doc.setFont(undefined, "italic");
   doc.setFontSize(12);
-  doc.text(`Status Pembayaran: ${order.paymentStatus}`, 14, finalY);
-  doc.text(`Status Pengiriman: ${order.deliveryStatus}`, 14, finalY + 7);
-  doc.setFontSize(14);
-  doc.text(`TOTAL: ${rupiah(total)}`, 140, finalY + 7);
+  doc.text("Wildan", sigStartX, sigY);
+  
+  // Signer name and date
+  doc.setFont(undefined, "bold");
+  doc.setFontSize(9);
+  doc.setTextColor(0, 0, 0);
+  yPos += 4;
+  doc.text("M Wildan Munawar", signatureX, yPos);
+  yPos += 5;
+  doc.setFont(undefined, "normal");
+  doc.text(order.createdAt.toLocaleDateString("id-ID"), signatureX, yPos);
+
+  // Customer notes section
+  yPos = pageHeight - 25;
+  doc.setFontSize(10);
+  doc.setFont(undefined, "bold");
+  doc.text("Catatan pelanggan", margin, yPos);
+  
+  doc.setFontSize(9);
+  doc.setFont(undefined, "normal");
+  yPos += 5;
+  if (order.note) {
+    const noteLines = doc.splitTextToSize(order.note, pageWidth - 2 * margin);
+    doc.text(noteLines, margin, yPos);
+  }
 
   const arrayBuffer = doc.output("arraybuffer");
   return new NextResponse(arrayBuffer, {

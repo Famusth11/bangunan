@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Archive, BarChart3, BriefcaseBusiness, Building2, ClipboardList, Contact, Home, LogOut, PackagePlus, Truck, UserRound, WalletCards } from "lucide-react";
+import { Archive, BarChart3, BriefcaseBusiness, Building2, ClipboardList, Home, LogOut, PackagePlus, Truck, UserRound, WalletCards } from "lucide-react";
 import { getSessionUser } from "@/lib/auth";
 import { ThemeToggle } from "@/components/admin/ThemeToggle";
 
@@ -7,7 +7,7 @@ const nav = [
   { href: "/admin", label: "Dashboard", icon: Home },
   { href: "/admin/orders", label: "Sales Order", icon: ClipboardList },
   { href: "/admin/purchase-orders", label: "PO Supplier", icon: Truck },
-  { href: "/admin/customers", label: "Customer", icon: Contact },
+  { href: "/admin/monthly-report", label: "Laporan Bulanan", icon: BarChart3 },
   { href: "/admin/suppliers", label: "Supplier", icon: Building2 },
   { href: "/admin/finance", label: "Keuangan", icon: WalletCards },
   { href: "/admin/projects", label: "Arsip Proyek", icon: BriefcaseBusiness },

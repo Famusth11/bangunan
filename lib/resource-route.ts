@@ -34,7 +34,11 @@ function normalize(data: Record<string, any>, config: ResourceConfig) {
     if (copy[field] !== undefined && copy[field] !== "") copy[field] = Number(copy[field]);
   }
   for (const field of config.dateFields || []) {
-    if (copy[field]) copy[field] = new Date(copy[field]);
+    if (copy[field]) {
+      copy[field] = new Date(copy[field]);
+    } else {
+      delete copy[field];
+    }
   }
   for (const field of config.booleanFields || []) {
     if (copy[field] !== undefined) copy[field] = Boolean(copy[field]);

@@ -9,69 +9,68 @@ export async function GET() {
   const start = new Date();
   start.setHours(0, 0, 0, 0);
 
-  let todayOrders;
-  let runningProjects;
-  let unpaidOrders;
-  let purchaseOrders;
-  let finance;
-  let recentOrders;
+  let todayOrders = 0;
+  let runningProjects = 0;
+  let unpaidOrders: any[] = [];
+  let purchaseOrders: any[] = [];
+  let financeRecords: any[] = [];
+  let recentOrders: any[] = [];
+  let deliveredOrders = 0;
 
   try {
-    [todayOrders, runningProjects, unpaidOrders, purchaseOrders, finance, recentOrders] = await Promise.all([
+    [todayOrders, runningProjects, unpaidOrders, purchaseOrders, financeRecords, recentOrders, deliveredOrders] = await Promise.all([
       prisma.salesOrder.count({ where: { createdAt: { gte: start } } }),
       prisma.salesOrder.count({ where: { orderStatus: "PROSES" } }),
-      prisma.salesOrder.findMany({ where: { paymentStatus: "BELUM" } }),
+      prisma.salesOrder.findMany({ where: { paymentStatus: "BELUM" }, take: 10 }),
       prisma.purchaseOrder.findMany({ where: { paymentStatus: "BELUM" }, take: 5, orderBy: { createdAt: "desc" } }),
-      prisma.financeRecord.findMany(),
-      prisma.salesOrder.findMany({ take: 7, orderBy: { createdAt: "asc" } })
+      prisma.financeRecord.findMany({ orderBy: { createdAt: "desc" } }),
+      prisma.salesOrder.findMany({ take: 7, orderBy: { createdAt: "desc" } }),
+      prisma.salesOrder.count({ where: { deliveryStatus: { contains: "Terkirim", mode: "insensitive" } } })
     ]);
-  } catch {
-    return NextResponse.json({
-      metrics: {
-        todayOrders: 2,
-        runningProjects: 4,
-        totalReceivable: 15750000,
-        delivery: "3 terkirim",
-        supplierStock: "2 PO perlu follow-up",
-        reminders: 5
-      },
-      finance: { moneyIn: 25000000, moneyOut: 14200000, profit: 10800000 },
-      chart: [
-        { name: "Sen", total: 3500000 },
-        { name: "Sel", total: 5200000 },
-        { name: "Rab", total: 7800000 },
-        { name: "Kam", total: 6400000 },
-        { name: "Jum", total: 9100000 }
-      ],
-      notifications: [
-        "Database belum terhubung",
-        "Jalankan PostgreSQL, migrasi, dan seed untuk menggunakan data nyata",
-        "Follow-up pembayaran contoh order Cluster Harmoni"
-      ]
-    });
+  } catch (error) {
+    console.error("Dashboard error:", error);
   }
 
+  // Calculate metrics from real data
   const totalReceivable = unpaidOrders.reduce((sum, order) => sum + Number(order.price) * order.quantity, 0);
-  const moneyIn = finance.filter((item) => item.type === "MASUK").reduce((sum, item) => sum + Number(item.amount), 0);
-  const moneyOut = finance.filter((item) => item.type === "KELUAR").reduce((sum, item) => sum + Number(item.amount), 0);
+  const moneyIn = financeRecords.filter((item) => item.type === "MASUK").reduce((sum, item) => sum + Number(item.amount), 0);
+  const moneyOut = financeRecords.filter((item) => item.type === "KELUAR").reduce((sum, item) => sum + Number(item.amount), 0);
+
+  // Build chart data from recent orders
+  const chartData = recentOrders.map((order) => ({
+    name: order.createdAt.toLocaleDateString("id-ID", { day: "2-digit", month: "short" }),
+    total: Number(order.price) * order.quantity
+  }));
+
+  // Build notifications
+  const notifications = [
+    ...unpaidOrders.slice(0, 3).map((order) => `Follow-up pembayaran ${order.customerName} - ${(Number(order.price) * order.quantity).toLocaleString("id-ID", { style: "currency", currency: "IDR" })}`),
+    ...purchaseOrders.slice(0, 2).map((po) => `Cek ETA supplier ${po.supplierName}`)
+  ];
+
+  // If no data, show helpful notifications
+  if (todayOrders === 0 && runningProjects === 0 && unpaidOrders.length === 0) {
+    notifications.length = 0;
+    notifications.push("Belum ada data order atau transaksi");
+  }
 
   return NextResponse.json({
     metrics: {
       todayOrders,
       runningProjects,
       totalReceivable,
-      delivery: `${await prisma.salesOrder.count({ where: { deliveryStatus: { contains: "Terkirim", mode: "insensitive" } } })} terkirim`,
+      delivery: `${deliveredOrders} terkirim`,
       supplierStock: `${purchaseOrders.length} PO perlu follow-up`,
       reminders: unpaidOrders.length
     },
     finance: { moneyIn, moneyOut, profit: moneyIn - moneyOut },
-    chart: recentOrders.map((order) => ({
-      name: order.createdAt.toLocaleDateString("id-ID", { day: "2-digit", month: "short" }),
-      total: Number(order.price) * order.quantity
-    })),
-    notifications: [
-      ...unpaidOrders.slice(0, 3).map((order) => `Follow-up pembayaran ${order.customerName}`),
-      ...purchaseOrders.slice(0, 2).map((po) => `Cek ETA supplier ${po.supplierName}`)
-    ]
+    chart: chartData.length > 0 ? chartData : [
+      { name: "Senin", total: 0 },
+      { name: "Selasa", total: 0 },
+      { name: "Rabu", total: 0 },
+      { name: "Kamis", total: 0 },
+      { name: "Jumat", total: 0 }
+    ],
+    notifications
   });
 }
