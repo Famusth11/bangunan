@@ -97,9 +97,6 @@ export async function GET(
 
   // --- TABEL ITEM ---
   yPos += 8;
-  const tableStartX = margin;
-  const tableWidth = pageWidth - 2 * margin;
-  
   autoTable(doc, {
     startY: yPos,
     head: [["#", "Item", "Satuan", "Kuantitas", "Biaya Satuan", "Total"]],
