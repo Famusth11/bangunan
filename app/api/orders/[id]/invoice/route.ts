@@ -23,34 +23,34 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
 
   // Header - Company Info (Left)
   doc.setFontSize(13);
-  doc.setFont(undefined, "bold");
+  doc.setFont("helvetica", "bold");
   doc.text("BANGUNAWAR", margin, 15);
   
   doc.setFontSize(9);
-  doc.setFont(undefined, "normal");
+  doc.setFont("helvetica", "normal");
   doc.text("Karangnangka RT 02 RW 01", margin, 21);
   doc.text("089525626994", margin, 26);
   doc.text("wildanpowel@gmail.com", margin, 31);
 
   // Header - FAKTUR (Right)
   doc.setFontSize(22);
-  doc.setFont(undefined, "bold");
+  doc.setFont("helvetica", "bold");
   doc.text("FAKTUR", rightColumn + 5, 18);
   
   // Invoice Number and Date (Right)
   doc.setFontSize(10);
-  doc.setFont(undefined, "normal");
+  doc.setFont("helvetica", "normal");
   doc.text(`#${order.invoiceNumber}`, rightColumn + 5, 28);
   doc.text(`Tanggal: ${order.createdAt.toLocaleDateString("id-ID")}`, rightColumn + 5, 34);
 
   // "Tagih Kepada:" section (Left)
   let yPos = 44;
   doc.setFontSize(10);
-  doc.setFont(undefined, "bold");
+  doc.setFont("helvetica", "bold");
   doc.text("Tagih Kepada: " + order.customerName, margin, yPos);
   
   doc.setFontSize(9);
-  doc.setFont(undefined, "normal");
+  doc.setFont("helvetica", "normal");
   yPos += 5;
   doc.text(order.projectAddress, margin, yPos);
   yPos += 5;
@@ -89,7 +89,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
   // Subtotal and Total
   yPos = (doc as any).lastAutoTable.finalY + 8;
   doc.setFontSize(10);
-  doc.setFont(undefined, "normal");
+  doc.setFont("helvetica", "normal");
   
   // Subtotal
   const subtotalX = pageWidth - margin - 70;
@@ -104,7 +104,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
   
   // Total
   yPos += 5;
-  doc.setFont(undefined, "bold");
+  doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
   doc.text("Total", subtotalX, yPos);
   doc.text(rupiah(total.toString()), pageWidth - margin - 2, yPos, { align: "right" });
@@ -126,9 +126,9 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
     doc.setFontSize(14);
     doc.text("BELUM LUNAS", signatureX - 10, yPos + 8, { angle: -20 });
   }
-  doc.setFont(undefined, "bold");
+  doc.setFont("helvetica", "bold");
   doc.setTextColor(0, 0, 0);
-  doc.setFont(undefined, "normal");
+  doc.setFont("helvetica", "normal");
   
   // Signature line
   yPos += 20;
@@ -143,7 +143,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
   // Draw a simple signature-like mark
   const sigStartX = signatureX + 5;
   const sigY = yPos - 8;
-  doc.setFont(undefined, "italic");
+  doc.setFont("helvetica", "italic");
   doc.setFontSize(12);
   doc.text("Wildan", sigStartX, sigY);
   
@@ -154,17 +154,17 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
   yPos += 4;
   doc.text("M Wildan Munawar", signatureX, yPos);
   yPos += 5;
-  doc.setFont(undefined, "normal");
+  doc.setFont("helvetica", "normal");
   doc.text(order.createdAt.toLocaleDateString("id-ID"), signatureX, yPos);
 
   // Customer notes section
   yPos = pageHeight - 25;
   doc.setFontSize(10);
-  doc.setFont(undefined, "bold");
+  doc.setFont("helvetica", "bold");
   doc.text("Catatan pelanggan", margin, yPos);
   
   doc.setFontSize(9);
-  doc.setFont(undefined, "normal");
+  doc.setFont("helvetica", "normal");
   yPos += 5;
   if (order.note) {
     const noteLines = doc.splitTextToSize(order.note, pageWidth - 2 * margin);
