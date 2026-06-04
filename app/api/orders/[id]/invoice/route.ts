@@ -104,46 +104,42 @@ export async function GET(
       [
         "1",
         order.item,
-        "Pcs",
+        "Meter",
         order.quantity.toString(),
         rupiah(order.price.toString()),
         rupiah(total.toString()),
       ],
     ],
     columnStyles: {
-      0: { cellWidth: 8, halign: "center", valign: "middle" },
-      1: { cellWidth: 50, halign: "left", valign: "middle" },
-      2: { cellWidth: 14, halign: "center", valign: "middle" },
-      3: { cellWidth: 14, halign: "center", valign: "middle" },
+      0: { cellWidth: 10, halign: "center", valign: "middle" },
+      1: { cellWidth: 48, halign: "left", valign: "top" },
+      2: { cellWidth: 16, halign: "center", valign: "middle" },
+      3: { cellWidth: 16, halign: "center", valign: "middle" },
       4: { cellWidth: 32, halign: "right", valign: "middle" },
-      5: { cellWidth: 36, halign: "right", valign: "middle" },
+      5: { cellWidth: 32, halign: "right", valign: "middle" },
     },
     styles: {
       fontSize: 9,
-      cellPadding: { top: 4, right: 5, bottom: 4, left: 5 },
+      cellPadding: { top: 5, right: 4, bottom: 5, left: 4 },
       textColor: [0, 0, 0],
       lineColor: [200, 200, 200],
-      lineWidth: 0.4,
+      lineWidth: 0.3,
+      overflow: "linebreak",
     },
     headStyles: {
-      fillColor: [68, 114, 196],
-      textColor: [255, 255, 255],
+      fillColor: [220, 220, 220],
+      textColor: [60, 60, 60],
       fontStyle: "bold",
       fontSize: 9,
-      lineColor: [68, 114, 196],
+      lineColor: [180, 180, 180],
       lineWidth: 0.5,
     },
     bodyStyles: {
       lineColor: [220, 220, 220],
-      lineWidth: 0.4,
-    },
-    alternateRowStyles: {
-      fillColor: [245, 245, 245],
+      lineWidth: 0.3,
+      fillColor: [255, 255, 255],
     },
     margin: { left: margin, right: margin },
-    didDrawPage: function () {
-      // Opsional: bisa digunakan jika perlu custom drawing
-    },
   });
 
   // --- SUBTOTAL & TOTAL ---
