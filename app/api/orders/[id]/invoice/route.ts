@@ -5,50 +5,89 @@ import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/api";
 import { rupiah } from "@/lib/format";
 
+// Pastikan menggunakan runtime nodejs karena jspdf butuh module pdfkit/node
 export const runtime = "nodejs";
 
-export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
+// Antarmuka Extended agar jsPDF mengenali properti internal autoTable tanpa error casting
+interface ExtendedJsPDF extends jsPDF {
+  lastAutoTable?: {
+    finalY: number;
+  };
+}
+
+export async function GET(
+  _: Request,
+  context: { params: Promise<{ id: string }> }
+) {
+  // 1. Autentikasi
   const auth = await requireAuth();
   if (auth.error) return auth.error;
-  const { id } = await params;
-  const order = await prisma.salesOrder.findUnique({ where: { id } });
-  if (!order) return NextResponse.json({ message: "Order tidak ditemukan" }, { status: 404 });
 
-  const doc = new jsPDF();
+  // 2. Ambil ID dari parameter URL (Next.js 15+ params adalah Promise)
+  const { id } = await context.params;
+
+  // 3. Fetch data Pesanan dari Database
+  const orderData = await prisma.salesOrder.findUnique({ where: { id } });
+  
+  if (!orderData) {
+    return NextResponse.json(
+      { message: "Order tidak ditemukan" },
+      { status: 404 }
+    );
+  }
+
+  // 4. Normalisasi Data (Mengubah Decimal/Date Prisma menjadi tipe primitives)
+  const order = {
+    id: String(orderData.id),
+    invoiceNumber: orderData.invoiceNumber ?? "0000",
+    customerName: orderData.customerName ?? "Pelanggan",
+    whatsapp: orderData.whatsapp ?? "-",
+    projectAddress: orderData.projectAddress ?? "-",
+    item: orderData.item ?? "Item",
+    quantity: Number(orderData.quantity ?? 0),
+    price: orderData.price ? Number(orderData.price) : 0,
+    paymentStatus: String(orderData.paymentStatus ?? "BELUM LUNAS"),
+    note: "",
+    createdAt: orderData.createdAt ? new Date(orderData.createdAt) : new Date(),
+  };
+
+  // 5. Inisialisasi jsPDF
+  const doc = new jsPDF() as ExtendedJsPDF;
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
-  const total = Number(order.price) * order.quantity;
+  const total = order.price * order.quantity;
   const margin = 14;
   const rightColumn = pageWidth - margin - 50;
 
-  // Header - Company Info (Left)
+  // --- HEADER ---
+  // Info Perusahaan (Kiri)
   doc.setFontSize(13);
   doc.setFont("helvetica", "bold");
   doc.text("BANGUNAWAR", margin, 15);
-  
+
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
   doc.text("Karangnangka RT 02 RW 01", margin, 21);
   doc.text("089525626994", margin, 26);
   doc.text("wildanpowel@gmail.com", margin, 31);
 
-  // Header - FAKTUR (Right)
+  // Judul FAKTUR (Kanan)
   doc.setFontSize(22);
   doc.setFont("helvetica", "bold");
   doc.text("FAKTUR", rightColumn + 5, 18);
-  
-  // Invoice Number and Date (Right)
+
+  // Invoice & Tanggal (Kanan)
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
   doc.text(`#${order.invoiceNumber}`, rightColumn + 5, 28);
   doc.text(`Tanggal: ${order.createdAt.toLocaleDateString("id-ID")}`, rightColumn + 5, 34);
 
-  // "Tagih Kepada:" section (Left)
+  // --- IDENTITAS PELANGGAN ---
   let yPos = 44;
   doc.setFontSize(10);
   doc.setFont("helvetica", "bold");
   doc.text("Tagih Kepada: " + order.customerName, margin, yPos);
-  
+
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
   yPos += 5;
@@ -56,13 +95,20 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
   yPos += 5;
   doc.text(order.whatsapp, margin, yPos);
 
-  // Items Table
+  // --- TABEL ITEM ---
   yPos += 8;
   autoTable(doc, {
     startY: yPos,
     head: [["#", "Item", "Satuan", "Kuantitas", "Biaya satuan", "Total"]],
     body: [
-      ["1", order.item, "Meter", order.quantity.toString(), rupiah(order.price.toString()), rupiah(total.toString())]
+      [
+        "1",
+        order.item,
+        "Meter",
+        order.quantity.toString(),
+        rupiah(order.price.toString()),
+        rupiah(total.toString()),
+      ],
     ],
     columnStyles: {
       0: { cellWidth: 8, halign: "center" },
@@ -70,84 +116,81 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
       2: { cellWidth: 20, halign: "center" },
       3: { cellWidth: 20, halign: "center" },
       4: { cellWidth: 30, halign: "right" },
-      5: { cellWidth: 32, halign: "right" }
+      5: { cellWidth: 32, halign: "right" },
     },
-    styles: { 
+    styles: {
       fontSize: 9,
       cellPadding: 3,
-      textColor: [0, 0, 0]
+      textColor: [0, 0, 0],
     },
-    headStyles: { 
+    headStyles: {
       fillColor: [220, 220, 220],
       textColor: [0, 0, 0],
       fontStyle: "bold",
-      fontSize: 9
+      fontSize: 9,
     },
-    margin: { left: margin, right: margin }
+    margin: { left: margin, right: margin },
   });
 
-  // Subtotal and Total
-  yPos = (doc as any).lastAutoTable.finalY + 8;
+  // --- SUBTOTAL & TOTAL ---
+  const finalY = doc.lastAutoTable?.finalY ?? yPos + 20;
+  yPos = finalY + 8;
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
-  
-  // Subtotal
+
   const subtotalX = pageWidth - margin - 70;
   doc.text("Subtotal", subtotalX, yPos);
   doc.text(rupiah(total.toString()), pageWidth - margin - 2, yPos, { align: "right" });
-  
-  // Line separator
+
+  // Garis Pemisah
   yPos += 4;
   doc.setDrawColor(180);
   doc.setLineWidth(0.5);
   doc.line(subtotalX, yPos, pageWidth - margin, yPos);
-  
-  // Total
+
+  // Total Akhir
   yPos += 5;
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
   doc.text("Total", subtotalX, yPos);
   doc.text(rupiah(total.toString()), pageWidth - margin - 2, yPos, { align: "right" });
 
-  // Signature section
+  // --- Tanda Tangan & Status ---
   yPos += 15;
-  
-  // Signature area (Right side)
   const signatureX = pageWidth - margin - 55;
-  
-  // Payment Status stamp (positioned at signature area)
+
+  // Stempel Status Pembayaran
   doc.setFontSize(16);
   const isLunas = order.paymentStatus === "LUNAS";
   if (isLunas) {
-    doc.setTextColor(100, 180, 100);
+    doc.setTextColor(100, 180, 100); // Hijau
     doc.text("LUNAS", signatureX - 5, yPos + 8, { angle: -20 });
   } else {
-    doc.setTextColor(220, 100, 100);
+    doc.setTextColor(220, 100, 100); // Merah
     doc.setFontSize(14);
     doc.text("BELUM LUNAS", signatureX - 10, yPos + 8, { angle: -20 });
   }
-  doc.setFont("helvetica", "bold");
+
+  // Reset warna teks
   doc.setTextColor(0, 0, 0);
-  doc.setFont("helvetica", "normal");
-  
-  // Signature line
+
+  // Garis Tanda Tangan
   yPos += 20;
   doc.setFontSize(9);
   doc.setDrawColor(0);
   doc.setLineWidth(0.5);
   doc.line(signatureX, yPos, pageWidth - margin - 5, yPos);
-  
-  // Simple signature representation (curved lines)
+
+  // Teken tangan (Visual)
   doc.setLineWidth(0.3);
   doc.setTextColor(80, 80, 80);
-  // Draw a simple signature-like mark
   const sigStartX = signatureX + 5;
   const sigY = yPos - 8;
   doc.setFont("helvetica", "italic");
   doc.setFontSize(12);
   doc.text("Wildan", sigStartX, sigY);
-  
-  // Signer name and date
+
+  // Nama & Tanggal Penandatangan
   doc.setFont("helvetica", "bold");
   doc.setFontSize(9);
   doc.setTextColor(0, 0, 0);
@@ -157,12 +200,12 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
   doc.setFont("helvetica", "normal");
   doc.text(order.createdAt.toLocaleDateString("id-ID"), signatureX, yPos);
 
-  // Customer notes section
+  // --- CATATAN PELANGGAN ---
   yPos = pageHeight - 25;
   doc.setFontSize(10);
   doc.setFont("helvetica", "bold");
   doc.text("Catatan pelanggan", margin, yPos);
-  
+
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
   yPos += 5;
@@ -171,11 +214,12 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
     doc.text(noteLines, margin, yPos);
   }
 
+  // --- OUTPUT RESPONSE ---
   const arrayBuffer = doc.output("arraybuffer");
   return new NextResponse(arrayBuffer, {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `inline; filename=${order.invoiceNumber}.pdf`
-    }
+      "Content-Disposition": `inline; filename=${order.invoiceNumber}.pdf`,
+    },
   });
 }
