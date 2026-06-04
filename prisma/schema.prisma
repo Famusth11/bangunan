@@ -1,0 +1,161 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  STAFF
+}
+
+enum PaymentStatus {
+  LUNAS
+  BELUM
+}
+
+enum OrderStatus {
+  PENDING
+  PROSES
+  SELESAI
+}
+
+enum CustomerCategory {
+  RETAIL
+  TUKANG
+  APLIKATOR
+  KONTRAKTOR
+  MANDOR
+}
+
+enum FinanceType {
+  MASUK
+  KELUAR
+  HUTANG
+  PIUTANG
+  ONGKIR
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(STAFF)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model SalesOrder {
+  id             String        @id @default(cuid())
+  invoiceNumber  String        @unique
+  customerName   String
+  whatsapp       String
+  projectAddress String
+  item           String
+  quantity       Int
+  price          Decimal       @db.Decimal(14, 2)
+  paymentStatus  PaymentStatus @default(BELUM)
+  deliveryStatus String        @default("Menunggu")
+  orderStatus    OrderStatus   @default(PENDING)
+  customerId     String?
+  customer       Customer?     @relation(fields: [customerId], references: [id])
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+model PurchaseOrder {
+  id            String        @id @default(cuid())
+  supplierName  String
+  item          String
+  costPrice     Decimal       @db.Decimal(14, 2)
+  shippingCost  Decimal       @default(0) @db.Decimal(14, 2)
+  eta           DateTime?
+  paymentStatus PaymentStatus @default(BELUM)
+  supplierId    String?
+  supplier      Supplier?     @relation(fields: [supplierId], references: [id])
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model Customer {
+  id        String           @id @default(cuid())
+  name      String
+  whatsapp  String
+  address   String
+  category  CustomerCategory
+  orders    SalesOrder[]
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+}
+
+model Supplier {
+  id            String          @id @default(cuid())
+  name          String
+  salesContact  String
+  area          String
+  paymentTerm   String
+  productType   String
+  latestPricelist Decimal       @default(0) @db.Decimal(14, 2)
+  purchaseOrders PurchaseOrder[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+model FinanceRecord {
+  id          String      @id @default(cuid())
+  title       String
+  type        FinanceType
+  amount      Decimal     @db.Decimal(14, 2)
+  projectName String?
+  note        String?
+  recordDate  DateTime    @default(now())
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model Worker {
+  id        String   @id @default(cuid())
+  name      String
+  specialty String
+  area      String
+  quality   String
+  whatsapp  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ProjectArchive {
+  id           String   @id @default(cuid())
+  title        String
+  beforeImage  String?
+  afterImage   String?
+  location     String
+  material     String
+  projectValue Decimal  @db.Decimal(14, 2)
+  isPublished  Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  price       Decimal  @db.Decimal(14, 2)
+  imageUrl    String?
+  isPromo     Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Inquiry {
+  id        String   @id @default(cuid())
+  name      String
+  whatsapp  String
+  message   String
+  createdAt DateTime @default(now())
+}
