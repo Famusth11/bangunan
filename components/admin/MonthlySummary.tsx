@@ -66,17 +66,6 @@ export function MonthlySummary() {
     }
   }
 
-  function getTypeLabel(type: string) {
-    const labels: Record<string, string> = {
-      MASUK: "Pemasukan",
-      KELUAR: "Pengeluaran",
-      ONGKIR: "Ongkir",
-      HUTANG: "Hutang",
-      PIUTANG: "Piutang"
-    };
-    return labels[type] || type;
-  }
-
   const monthName = new Date(year, month, 1).toLocaleDateString("id-ID", { month: "long", year: "numeric" });
 
   return (
