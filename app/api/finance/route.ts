@@ -6,6 +6,16 @@ const handlers = resourceHandlers({
   searchFields: ["title", "type", "projectName", "note"],
   numericFields: ["amount"],
   dateFields: ["recordDate"],
+  exportFileName: "keuangan",
+  exportFields: [
+    { name: "title", label: "Judul" },
+    { name: "type", label: "Tipe" },
+    { name: "amount", label: "Nominal", type: "currency" },
+    { name: "projectName", label: "Nama Proyek" },
+    { name: "recordDate", label: "Tanggal", type: "date" },
+    { name: "note", label: "Catatan" },
+    { name: "createdAt", label: "Tanggal Dibuat", type: "date" }
+  ],
   adminOnlyDelete: true,
   schema: financeSchema
 });

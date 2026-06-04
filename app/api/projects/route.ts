@@ -6,6 +6,15 @@ const handlers = resourceHandlers({
   searchFields: ["title", "location", "material"],
   numericFields: ["projectValue"],
   booleanFields: ["isPublished"],
+  exportFileName: "arsip-proyek",
+  exportFields: [
+    { name: "title", label: "Judul Proyek" },
+    { name: "location", label: "Lokasi" },
+    { name: "material", label: "Material" },
+    { name: "projectValue", label: "Nilai Proyek", type: "currency" },
+    { name: "isPublished", label: "Dipublikasikan", type: "boolean" },
+    { name: "createdAt", label: "Tanggal Dibuat", type: "date" }
+  ],
   adminOnlyDelete: true,
   schema: projectSchema
 });

@@ -4,6 +4,14 @@ import { customerSchema } from "@/lib/validators";
 const handlers = resourceHandlers({
   model: "customer",
   searchFields: ["name", "whatsapp", "address", "category"],
+  exportFileName: "customer",
+  exportFields: [
+    { name: "name", label: "Nama" },
+    { name: "whatsapp", label: "No WA" },
+    { name: "address", label: "Alamat" },
+    { name: "category", label: "Kategori" },
+    { name: "createdAt", label: "Tanggal Dibuat", type: "date" }
+  ],
   adminOnlyDelete: true,
   schema: customerSchema
 });

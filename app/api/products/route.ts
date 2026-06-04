@@ -6,6 +6,14 @@ const handlers = resourceHandlers({
   searchFields: ["name", "description"],
   numericFields: ["price"],
   booleanFields: ["isPromo"],
+  exportFileName: "stock-barang",
+  exportFields: [
+    { name: "name", label: "Nama Stock Barang" },
+    { name: "description", label: "Keterangan" },
+    { name: "price", label: "Harga", type: "currency" },
+    { name: "isPromo", label: "Promo", type: "boolean" },
+    { name: "createdAt", label: "Tanggal Dibuat", type: "date" }
+  ],
   adminOnlyDelete: true,
   schema: productSchema
 });

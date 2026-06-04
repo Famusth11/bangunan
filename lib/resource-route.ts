@@ -4,12 +4,20 @@ import type { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { jsonError, pagination, parseSearchParams, requireAuth } from "@/lib/api";
 
+type ExportField = {
+  name: string;
+  label: string;
+  type?: "text" | "number" | "currency" | "date" | "boolean";
+};
+
 type ResourceConfig = {
   model: keyof typeof prisma;
   searchFields: string[];
   numericFields?: string[];
   dateFields?: string[];
   booleanFields?: string[];
+  exportFields?: ExportField[];
+  exportFileName?: string;
   adminOnlyDelete?: boolean;
   defaults?: (data: Record<string, any>) => Record<string, any>;
   afterCreate?: (item: any) => Promise<void>;
@@ -48,6 +56,71 @@ function validate(data: Record<string, any>, config: ResourceConfig) {
   };
 }
 
+function toPlainValue(value: any) {
+  if (value === null || value === undefined) return "";
+  if (typeof value?.toNumber === "function") return value.toNumber();
+  if (value instanceof Date) return value;
+  return value;
+}
+
+function defaultExportFields(items: Record<string, any>[]): ExportField[] {
+  const hiddenFields = new Set(["id", "createdAt", "updatedAt", "customerId", "supplierId"]);
+  const first = items[0] || {};
+  return Object.keys(first)
+    .filter((key) => !hiddenFields.has(key))
+    .map((key) => ({ name: key, label: key }));
+}
+
+function buildExcel(items: Record<string, any>[], config: ResourceConfig) {
+  const fields = config.exportFields || defaultExportFields(items);
+  const header = fields.map((field) => field.label);
+  const rows = items.map((item) =>
+    fields.map((field) => {
+      const value = toPlainValue(item[field.name]);
+      if (field.type === "boolean") return value ? "Ya" : "Tidak";
+      if (field.type === "date" && value) return new Date(value);
+      return value;
+    })
+  );
+
+  const worksheet = XLSX.utils.aoa_to_sheet([header, ...rows]);
+  worksheet["!cols"] = fields.map((field, index) => {
+    const maxLength = Math.max(
+      field.label.length,
+      ...rows.map((row) => String(row[index] ?? "").length)
+    );
+    return { wch: Math.min(Math.max(maxLength + 2, 12), 36) };
+  });
+  worksheet["!autofilter"] = {
+    ref: XLSX.utils.encode_range({
+      s: { r: 0, c: 0 },
+      e: { r: Math.max(rows.length, 1), c: Math.max(fields.length - 1, 0) }
+    })
+  };
+  worksheet["!rows"] = [{ hpt: 22 }];
+
+  fields.forEach((field, columnIndex) => {
+    const headerCell = worksheet[XLSX.utils.encode_cell({ r: 0, c: columnIndex })];
+    if (headerCell) headerCell.s = { font: { bold: true } };
+
+    rows.forEach((_, rowIndex) => {
+      const cell = worksheet[XLSX.utils.encode_cell({ r: rowIndex + 1, c: columnIndex })];
+      if (!cell) return;
+      if (field.type === "currency") cell.z = '"Rp" #,##0';
+      if (field.type === "number") cell.z = "#,##0";
+      if (field.type === "date") cell.z = "dd/mm/yyyy";
+    });
+  });
+
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Data");
+  return XLSX.write(workbook, { bookType: "xlsx", type: "buffer", cellStyles: true });
+}
+
+function fileName(config: ResourceConfig) {
+  return `${config.exportFileName || String(config.model)}-export.xlsx`;
+}
+
 export function resourceHandlers(config: ResourceConfig) {
   return {
     async GET(request: Request) {
@@ -64,6 +137,21 @@ export function resourceHandlers(config: ResourceConfig) {
           }
         : {};
 
+      if (url.searchParams.get("export") === "xlsx") {
+        const items = await model(config).findMany({
+          where,
+          orderBy: { createdAt: "desc" },
+          take: 5000
+        });
+        const buffer = buildExcel(items, config);
+        return new NextResponse(buffer, {
+          headers: {
+            "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            "Content-Disposition": `attachment; filename=${fileName(config)}`
+          }
+        });
+      }
+
       const [items, total] = await Promise.all([
         model(config).findMany({
           where,
@@ -72,19 +160,6 @@ export function resourceHandlers(config: ResourceConfig) {
         }),
         model(config).count({ where })
       ]);
-
-      if (url.searchParams.get("export") === "xlsx") {
-        const worksheet = XLSX.utils.json_to_sheet(items);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Data");
-        const buffer = XLSX.write(workbook, { bookType: "xlsx", type: "buffer" });
-        return new NextResponse(buffer, {
-          headers: {
-            "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            "Content-Disposition": "attachment; filename=data-export.xlsx"
-          }
-        });
-      }
 
       return NextResponse.json({ items, total, page, limit });
     },

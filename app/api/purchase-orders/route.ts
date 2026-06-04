@@ -6,6 +6,16 @@ const handlers = resourceHandlers({
   searchFields: ["supplierName", "item"],
   numericFields: ["costPrice", "shippingCost"],
   dateFields: ["eta"],
+  exportFileName: "purchase-order",
+  exportFields: [
+    { name: "supplierName", label: "Nama Supplier" },
+    { name: "item", label: "Barang" },
+    { name: "costPrice", label: "Harga Modal", type: "currency" },
+    { name: "shippingCost", label: "Ongkir", type: "currency" },
+    { name: "eta", label: "Estimasi Tiba", type: "date" },
+    { name: "paymentStatus", label: "Status Pembayaran" },
+    { name: "createdAt", label: "Tanggal Dibuat", type: "date" }
+  ],
   adminOnlyDelete: true,
   schema: purchaseOrderSchema
 });
