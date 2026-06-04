@@ -99,37 +99,51 @@ export async function GET(
   yPos += 8;
   autoTable(doc, {
     startY: yPos,
-    head: [["#", "Item", "Satuan", "Kuantitas", "Biaya satuan", "Total"]],
+    head: [["#", "Item", "Satuan", "Kuantitas", "Biaya Satuan", "Total"]],
     body: [
       [
         "1",
         order.item,
-        "Meter",
+        "Pcs",
         order.quantity.toString(),
         rupiah(order.price.toString()),
         rupiah(total.toString()),
       ],
     ],
     columnStyles: {
-      0: { cellWidth: 8, halign: "center" },
-      1: { cellWidth: 50 },
-      2: { cellWidth: 20, halign: "center" },
-      3: { cellWidth: 20, halign: "center" },
-      4: { cellWidth: 30, halign: "right" },
-      5: { cellWidth: 32, halign: "right" },
+      0: { cellWidth: 10, halign: "center", valign: "middle" },
+      1: { cellWidth: 55, halign: "left", valign: "middle" },
+      2: { cellWidth: 15, halign: "center", valign: "middle" },
+      3: { cellWidth: 18, halign: "center", valign: "middle" },
+      4: { cellWidth: 28, halign: "right", valign: "middle" },
+      5: { cellWidth: 30, halign: "right", valign: "middle" },
     },
     styles: {
       fontSize: 9,
-      cellPadding: 3,
+      cellPadding: { top: 4, right: 5, bottom: 4, left: 5 },
       textColor: [0, 0, 0],
+      lineColor: [200, 200, 200],
+      lineWidth: 0.4,
     },
     headStyles: {
-      fillColor: [220, 220, 220],
-      textColor: [0, 0, 0],
+      fillColor: [68, 114, 196],
+      textColor: [255, 255, 255],
       fontStyle: "bold",
       fontSize: 9,
+      lineColor: [68, 114, 196],
+      lineWidth: 0.5,
+    },
+    bodyStyles: {
+      lineColor: [220, 220, 220],
+      lineWidth: 0.4,
+    },
+    alternateRowStyles: {
+      fillColor: [245, 245, 245],
     },
     margin: { left: margin, right: margin },
+    didDrawPage: function () {
+      // Opsional: bisa digunakan jika perlu custom drawing
+    },
   });
 
   // --- SUBTOTAL & TOTAL ---
