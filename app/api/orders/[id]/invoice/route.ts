@@ -148,7 +148,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
   doc.text("Wildan", sigStartX, sigY);
   
   // Signer name and date
-  doc.setFont(undefined, "bold");
+  doc.setFont("helvetica", "bold");
   doc.setFontSize(9);
   doc.setTextColor(0, 0, 0);
   yPos += 4;
