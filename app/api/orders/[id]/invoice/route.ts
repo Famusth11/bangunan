@@ -97,6 +97,9 @@ export async function GET(
 
   // --- TABEL ITEM ---
   yPos += 8;
+  const tableStartX = margin;
+  const tableWidth = pageWidth - 2 * margin;
+  
   autoTable(doc, {
     startY: yPos,
     head: [["#", "Item", "Satuan", "Kuantitas", "Biaya Satuan", "Total"]],
@@ -111,12 +114,12 @@ export async function GET(
       ],
     ],
     columnStyles: {
-      0: { cellWidth: 10, halign: "center", valign: "middle" },
-      1: { cellWidth: 55, halign: "left", valign: "middle" },
-      2: { cellWidth: 15, halign: "center", valign: "middle" },
-      3: { cellWidth: 18, halign: "center", valign: "middle" },
-      4: { cellWidth: 28, halign: "right", valign: "middle" },
-      5: { cellWidth: 30, halign: "right", valign: "middle" },
+      0: { cellWidth: 8, halign: "center", valign: "middle" },
+      1: { cellWidth: 50, halign: "left", valign: "middle" },
+      2: { cellWidth: 14, halign: "center", valign: "middle" },
+      3: { cellWidth: 14, halign: "center", valign: "middle" },
+      4: { cellWidth: 32, halign: "right", valign: "middle" },
+      5: { cellWidth: 36, halign: "right", valign: "middle" },
     },
     styles: {
       fontSize: 9,
@@ -148,26 +151,29 @@ export async function GET(
 
   // --- SUBTOTAL & TOTAL ---
   const finalY = doc.lastAutoTable?.finalY ?? yPos + 20;
-  yPos = finalY + 8;
+  yPos = finalY + 6;
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
 
-  const subtotalX = pageWidth - margin - 70;
-  doc.text("Subtotal", subtotalX, yPos);
-  doc.text(rupiah(total.toString()), pageWidth - margin - 2, yPos, { align: "right" });
+  // Align dengan kolom Total table (36 wide dari kanan)
+  const subtotalLabelX = pageWidth - margin - 36;
+  const subtotalValueX = pageWidth - margin - 5;
+
+  doc.text("Subtotal", subtotalLabelX, yPos);
+  doc.text(rupiah(total.toString()), subtotalValueX, yPos, { align: "right" });
 
   // Garis Pemisah
   yPos += 4;
   doc.setDrawColor(180);
   doc.setLineWidth(0.5);
-  doc.line(subtotalX, yPos, pageWidth - margin, yPos);
+  doc.line(subtotalLabelX, yPos, pageWidth - margin, yPos);
 
   // Total Akhir
   yPos += 5;
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
-  doc.text("Total", subtotalX, yPos);
-  doc.text(rupiah(total.toString()), pageWidth - margin - 2, yPos, { align: "right" });
+  doc.text("Total", subtotalLabelX, yPos);
+  doc.text(rupiah(total.toString()), subtotalValueX, yPos, { align: "right" });
 
   // --- Tanda Tangan & Status ---
   yPos += 15;
