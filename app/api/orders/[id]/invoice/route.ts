@@ -96,7 +96,7 @@ export async function GET(
   doc.text(order.whatsapp, margin, yPos);
 
   // --- TABEL ITEM ---
-  yPos += 8;
+  yPos += 10;
   autoTable(doc, {
     startY: yPos,
     head: [["#", "Item", "Satuan", "Kuantitas", "Biaya satuan", "Total"]],
@@ -112,11 +112,11 @@ export async function GET(
     ],
     columnStyles: {
       0: { cellWidth: 8, halign: "center" },
-      1: { cellWidth: 50 },
-      2: { cellWidth: 20, halign: "center" },
-      3: { cellWidth: 20, halign: "center" },
-      4: { cellWidth: 30, halign: "right" },
-      5: { cellWidth: 32, halign: "right" },
+      1: { cellWidth: 50, halign: "left" },
+      2: { cellWidth: 25, halign: "center" },
+      3: { cellWidth: 25, halign: "center" },
+      4: { cellWidth: 30, halign: "center" },
+      5: { cellWidth: 43, halign: "right" },
     },
     styles: {
       fontSize: 9,
