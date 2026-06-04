@@ -11,7 +11,8 @@
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
-    "backup:db": "tsx scripts/backup-database.ts"
+    "backup:db": "tsx scripts/backup-database.ts",
+    "sync:github": "powershell -ExecutionPolicy Bypass -File scripts/auto-git-sync.ps1"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",

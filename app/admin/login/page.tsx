@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { LockKeyhole } from "lucide-react";
+import { Eye, EyeOff, LockKeyhole } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
 
   async function submit(event: React.FormEvent) {
@@ -45,7 +46,23 @@ export default function LoginPage() {
         </label>
         <label className="mb-4 block text-sm font-medium">
           Password
-          <input className="focus-ring mt-1 w-full rounded-md border border-slate-200 px-3 py-2" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+          <div className="relative mt-1">
+            <input
+              className="focus-ring w-full rounded-md border border-slate-200 px-3 py-2 pr-11"
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+            <button
+              type="button"
+              aria-label={showPassword ? "Sembunyikan password" : "Lihat password"}
+              title={showPassword ? "Sembunyikan password" : "Lihat password"}
+              className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-slate-500 hover:text-slate-800"
+              onClick={() => setShowPassword((value) => !value)}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          </div>
         </label>
         {error && <p className="mb-3 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
         <button className="w-full rounded-md bg-brand px-4 py-2.5 font-semibold text-white">Masuk</button>
