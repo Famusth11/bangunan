@@ -77,17 +77,6 @@ export function MonthlySummary() {
     return colors[type] || "text-slate-600";
   }
 
-  function getTypeLabel(type: string) {
-    const labels: Record<string, string> = {
-      MASUK: "Pemasukan",
-      KELUAR: "Pengeluaran",
-      ONGKIR: "Ongkir",
-      HUTANG: "Hutang",
-      PIUTANG: "Piutang"
-    };
-    return labels[type] || type;
-  }
-
   const monthName = new Date(year, month, 1).toLocaleDateString("id-ID", { month: "long", year: "numeric" });
 
   return (
@@ -144,7 +133,7 @@ export function MonthlySummary() {
                         <p className="font-medium">{record.title}</p>
                         {record.projectName && <p className="text-xs text-muted">{record.projectName}</p>}
                       </div>
-                      <p className="font-semibold text-green-600">{rupiah(record.amount)}</p>
+                      <p className={`font-semibold ${getTypeColor("MASUK")}`}>{rupiah(record.amount)}</p>
                     </div>
                   ))}
                 {data.records.filter((r) => r.type === "MASUK").length === 0 && <p className="text-sm text-muted">Tidak ada pemasukan</p>}
@@ -162,7 +151,7 @@ export function MonthlySummary() {
                         <p className="font-medium">{record.title}</p>
                         {record.projectName && <p className="text-xs text-muted">{record.projectName}</p>}
                       </div>
-                      <p className="font-semibold text-red-600">{rupiah(record.amount)}</p>
+                      <p className={`font-semibold ${getTypeColor(record.type)}`}>{rupiah(record.amount)}</p>
                     </div>
                   ))}
                 {data.records.filter((r) => r.type === "KELUAR" || r.type === "ONGKIR").length === 0 && <p className="text-sm text-muted">Tidak ada pengeluaran</p>}
@@ -184,7 +173,7 @@ export function MonthlySummary() {
                             <p className="font-medium">{record.title}</p>
                             {record.projectName && <p className="text-xs text-muted">{record.projectName}</p>}
                           </div>
-                          <p className="font-semibold text-yellow-600">{rupiah(record.amount)}</p>
+                          <p className={`font-semibold ${getTypeColor("HUTANG")}`}>{rupiah(record.amount)}</p>
                         </div>
                       ))}
                   </div>
@@ -203,7 +192,7 @@ export function MonthlySummary() {
                             <p className="font-medium">{record.title}</p>
                             {record.projectName && <p className="text-xs text-muted">{record.projectName}</p>}
                           </div>
-                          <p className="font-semibold text-blue-600">{rupiah(record.amount)}</p>
+                          <p className={`font-semibold ${getTypeColor("PIUTANG")}`}>{rupiah(record.amount)}</p>
                         </div>
                       ))}
                   </div>
