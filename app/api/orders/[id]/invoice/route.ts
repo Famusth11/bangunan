@@ -108,9 +108,9 @@ export async function GET(
       0: { cellWidth: 10, halign: "center" },  // Kolom #
       1: { cellWidth: 45, halign: "left" },    // Kolom Item
       2: { cellWidth: 22, halign: "center" },  // Kolom Satuan
-      3: { cellWidth: 30, halign: "center" },  // Kolom Kuantitas
+      3: { cellWidth: 35, halign: "center" },  // Kolom Kuantitas
       4: { cellWidth: 40, halign: "right" },   // Kolom Biaya Satuan
-      5: { cellWidth: 43, halign: "right" }    // Kolom Total
+      5: { cellWidth: 40, halign: "right" }    // Kolom Total
     },
     styles: { 
       fontSize: 9,
